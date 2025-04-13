@@ -16,8 +16,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 # ========== CONFIG ========== #
 DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1360983185231581204/nRSSOwRgRoCSK0K4o9_eu8vpeQsRswLNyjUAZb6pTtrVGksrEjVw9RteyUA04xP3aNIv"
-CSV_FILENAME = "keyword_search_results.csv"
-ERROR_CSV_FILENAME = "error_urls.csv"
+COMBINED_CSV_FILENAME = "combined_output.csv"
 EXCEL_FILENAME = "urllist_250.xlsx"
 PICKLE_FILENAME = "previous_results.pkl"
 
@@ -27,17 +26,15 @@ keywords = [
 ]
 
 # ========== DISCORD ========== #
-def send_discord_message(content, file_paths=None):
+def send_discord_message(content, file_path=None):
     data = {"content": content}
     files = []
 
-    if file_paths:
-        for path in file_paths:
-            if os.path.exists(path):
-                try:
-                    files.append(("file", (os.path.basename(path), open(path, "rb"))))
-                except Exception as e:
-                    print(f"Error attaching file {path}: {e}")
+    if file_path and os.path.exists(file_path):
+        try:
+            files.append(("file", (os.path.basename(file_path), open(file_path, "rb"))))
+        except Exception as e:
+            print(f"Error attaching file {file_path}: {e}")
 
     try:
         response = requests.post(DISCORD_WEBHOOK_URL, data=data, files=files if files else None)
@@ -99,15 +96,17 @@ def main():
     driver = setup_driver()
     previous_results = load_previous_results()
     current_results = {}
-    updated_results = []
-    error_urls = []
+    combined_rows = []
+    updated_count = 0
+    error_count = 0
 
     try:
         for url in urls:
             found_keywords = find_keywords_in_website(driver, url)
 
             if found_keywords is None:
-                error_urls.append([url])
+                combined_rows.append([url, "", "Error"])
+                error_count += 1
                 continue
 
             keywords_str = ", ".join(sorted(found_keywords)) if found_keywords else ""
@@ -115,55 +114,28 @@ def main():
 
             if url not in previous_results or previous_results[url] != content_hash:
                 if found_keywords:
-                    updated_results.append([url, keywords_str])
+                    updated_count += 1
                     print(f"✅ {url} – {keywords_str}")
                 else:
                     print(f"No keywords found in {url} (updated)")
                 current_results[url] = content_hash
-            else:
-                print(f"No changes in {url}")
 
-        file_paths_to_send = []
+            combined_rows.append([url, keywords_str, "Success"])
 
-        # Save updated results
-        if updated_results:
-            with open(CSV_FILENAME, mode="w", newline="", encoding="utf-8") as file:
-                writer = csv.writer(file)
-                writer.writerow(["Website", "Found Keywords"])
-                writer.writerows(updated_results)
-            print(f"\n✅ Saved to {CSV_FILENAME}")
-            file_paths_to_send.append(CSV_FILENAME)
-
-        # Save error URLs (always valid CSV)
-        with open(ERROR_CSV_FILENAME, mode="w", newline="", encoding="utf-8") as file:
+        # Save combined CSV
+        with open(COMBINED_CSV_FILENAME, mode="w", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
-            writer.writerow(["Website with Error"])
-            if error_urls:
-                for err in error_urls:
-                    if isinstance(err, list):
-                        writer.writerow(err)
-                    else:
-                        writer.writerow([err])
-                print(f"⚠️ Errors saved to {ERROR_CSV_FILENAME}")
-            else:
-                writer.writerow(["No errors encountered."])
-                print("✅ No scraping errors.")
-        file_paths_to_send.append(ERROR_CSV_FILENAME)
+            writer.writerow(["Website", "Found Keywords", "Status"])
+            writer.writerows(combined_rows)
+        print(f"✅ Combined results saved to {COMBINED_CSV_FILENAME}")
 
         # Discord message
         message = ""
+        message += f"🔍 **Keyword Updates Found!**\nTotal updated: {updated_count}\n"
+        message += f"⚠️ Total errors: {error_count}\n"
+        message += f"📎 See attached CSV for full details."
 
-        if updated_results:
-            message += f"🔍 **Keyword Updates Found!**\nTotal: {len(updated_results)}\n📎 See attached CSV.\n"
-        else:
-            message += "✅ No keyword updates found.\n"
-
-        if error_urls:
-            message += f"⚠️ {len(error_urls)} URLs failed during scraping."
-        else:
-            message += "✅ No failed URLs."
-
-        send_discord_message(message.strip(), file_paths_to_send)
+        send_discord_message(message.strip(), COMBINED_CSV_FILENAME)
 
         previous_results.update(current_results)
         save_results(previous_results)
