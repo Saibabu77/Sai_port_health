@@ -104,8 +104,10 @@ def main():
         for url in urls:
             found_keywords = find_keywords_in_website(driver, url)
 
+            timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+
             if found_keywords is None:
-                combined_rows.append([url, "", "Error"])
+                combined_rows.append([url, "", "Error", timestamp])
                 error_count += 1
                 continue
 
@@ -119,23 +121,25 @@ def main():
                 else:
                     print(f"No keywords found in {url} (updated)")
                 current_results[url] = content_hash
+                combined_rows.append([url, keywords_str, "Updated", timestamp])
 
-            combined_rows.append([url, keywords_str, "Success"])
+        # Save only updated rows
+        if combined_rows:
+            with open(COMBINED_CSV_FILENAME, mode="w", newline="", encoding="utf-8") as file:
+                writer = csv.writer(file)
+                writer.writerow(["Website", "Found Keywords", "Status", "Timestamp"])
+                writer.writerows(combined_rows)
+            print(f"✅ Updated results saved to {COMBINED_CSV_FILENAME}")
 
-        # Save combined CSV
-        with open(COMBINED_CSV_FILENAME, mode="w", newline="", encoding="utf-8") as file:
-            writer = csv.writer(file)
-            writer.writerow(["Website", "Found Keywords", "Status"])
-            writer.writerows(combined_rows)
-        print(f"✅ Combined results saved to {COMBINED_CSV_FILENAME}")
-
-        # Discord message
-        message = ""
-        message += f"🔍 **Keyword Updates Found!**\nTotal updated: {updated_count}\n"
-        message += f"⚠️ Total errors: {error_count}\n"
-        message += f"📎 See attached CSV for full details."
-
-        send_discord_message(message.strip(), COMBINED_CSV_FILENAME)
+            # Send Discord message with CSV
+            message = ""
+            message += f"🔍 **Keyword Updates Found!**\nTotal updated: {updated_count}\n"
+            message += f"⚠️ Total errors: {error_count}\n"
+            message += f"📎 See attached CSV for details."
+            send_discord_message(message.strip(), COMBINED_CSV_FILENAME)
+        else:
+            print("No new updates detected. CSV not created.")
+            send_discord_message("✅ No updates detected in the latest run.")
 
         previous_results.update(current_results)
         save_results(previous_results)
