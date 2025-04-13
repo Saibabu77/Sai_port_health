@@ -75,12 +75,10 @@ def find_keywords_in_website(driver, url):
         print(f"Checking {url}...")
         driver.get(url)
 
-        # Wait until <body> is present
         WebDriverWait(driver, 15).until(
             EC.presence_of_element_located((By.TAG_NAME, "body"))
         )
 
-        # Use full page HTML source
         page_text = driver.page_source.lower()
 
         if not page_text.strip():
@@ -136,19 +134,23 @@ def main():
             print(f"\n✅ Saved to {CSV_FILENAME}")
             file_paths_to_send.append(CSV_FILENAME)
 
-        # Always save error file (even if empty)
+        # Save error URLs (always valid CSV)
         with open(ERROR_CSV_FILENAME, mode="w", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
             writer.writerow(["Website with Error"])
             if error_urls:
-                writer.writerows(error_urls)
+                for err in error_urls:
+                    if isinstance(err, list):
+                        writer.writerow(err)
+                    else:
+                        writer.writerow([err])
                 print(f"⚠️ Errors saved to {ERROR_CSV_FILENAME}")
             else:
                 writer.writerow(["No errors encountered."])
                 print("✅ No scraping errors.")
         file_paths_to_send.append(ERROR_CSV_FILENAME)
 
-        # Short message to stay under 2000 character Discord limit
+        # Discord message
         message = ""
 
         if updated_results:
