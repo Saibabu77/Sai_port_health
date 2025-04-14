@@ -13,7 +13,8 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
-
+from datetime import datetime
+from zoneinfo import ZoneInfo
 # ========== CONFIG ========== #
 DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1360983185231581204/nRSSOwRgRoCSK0K4o9_eu8vpeQsRswLNyjUAZb6pTtrVGksrEjVw9RteyUA04xP3aNIv"
 COMBINED_CSV_FILENAME = "combined_output.csv"
@@ -104,7 +105,7 @@ def main():
         for url in urls:
             found_keywords = find_keywords_in_website(driver, url)
 
-            timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+            timestamp = datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d %H:%M:%S %Z")
 
             if found_keywords is None:
                 combined_rows.append([url, "", "Error", timestamp])
