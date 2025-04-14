@@ -2,7 +2,7 @@ name: Run Keyword Scraper Every Hour
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Runs every hour
+    - cron: '0 */2 * * *'  # Runs every hour
   workflow_dispatch:      # Optional: allows manual run
 
 jobs:
