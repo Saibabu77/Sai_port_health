@@ -26,10 +26,11 @@ jobs:
         run: |
           python main.py
 
-      - name: Commit output
+      - name: Commit and Push output
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.email "you@example.com"
+          git config --global user.name "github-actions[bot]"
+          git remote set-url origin https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}
           git add output/links_output.html
           git commit -m "Update links_output.html" || echo "No changes to commit"
-          git push
+          git push origin main
