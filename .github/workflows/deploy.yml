@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GH_PAT }}
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -27,12 +29,9 @@ jobs:
           python main.py
 
       - name: Commit and Push output
-        env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
-          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}
           git add output/links_output.html
           git commit -m "Update links_output.html" || echo "No changes to commit"
           git push origin main
