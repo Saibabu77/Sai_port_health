@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Job Links</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #2e2e2e;
+            color: white;
+            margin: 20px;
+        }
+        h1 {
+            background-color: #14658a;
+            padding: 10px;
+            text-align: center;
+            border-radius: 10px;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 15px;
+            background: #3c3c3c;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        a {
+            color: #4ab1cf;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .timestamp {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Job Links</h1>
+
+<ul>
+{{ links }}
+</ul>
+
+<div class="timestamp">
+    {{ last_updated }}
+</div>
+
+</body>
+</html>
