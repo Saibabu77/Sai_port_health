@@ -19,7 +19,7 @@ from zoneinfo import ZoneInfo
 # ========== CONFIG ========== #
 DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1360983185231581204/nRSSOwRgRoCSK0K4o9_eu8vpeQsRswLNyjUAZb6pTtrVGksrEjVw9RteyUA04xP3aNIv"
 COMBINED_CSV_FILENAME = "combined_output.csv"
-EXCEL_FILENAME = "Main_All_Links_Sorted_Recent_77_prod"
+EXCEL_FILENAME = "Main_All_Links_Sorted_Recent_77_prod.xlsx"
 PICKLE_FILENAME = "previous_results.pkl"
 OUTPUT_HTML_FILENAME = "output/links_output.html"
 TEMPLATE_HTML_FILENAME = "template.html"
