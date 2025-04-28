@@ -1,0 +1,35 @@
+name: Scrape and Deploy Website
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"  # Run every 5 minutes
+  workflow_dispatch:       # Allow manual run
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          pip install selenium pandas openpyxl webdriver-manager
+
+      - name: Run scraper
+        run: |
+          python main.py
+
+      - name: Commit output
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add output/links_output.html
+          git commit -m "Update links_output.html" || echo "No changes to commit"
+          git push
