@@ -21,7 +21,7 @@ DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1360983185231581204/nRSS
 COMBINED_CSV_FILENAME = "combined_output.csv"
 EXCEL_FILENAME = "Main_All_Links_Sorted_Recent_77_prod.xlsx"
 PICKLE_FILENAME = "previous_results.pkl"
-OUTPUT_HTML_FILENAME = "output/links_output.html"
+OUTPUT_HTML_FILENAME = "docs/links_output.html"  # <== Save inside /docs for GitHub Pages
 TEMPLATE_HTML_FILENAME = "template.html"
 
 keywords = [
@@ -85,8 +85,10 @@ def generate_links_html(link_data, output_filename=OUTPUT_HTML_FILENAME, templat
         if status == "Updated":
             html_links += f'<li><a href="{url}" target="_blank">{url}</a> – {keywords} ({timestamp})</li>\n'
 
-    # Inject links into the template
+    # Add last updated timestamp
+    last_updated = datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d %H:%M:%S %Z")
     final_html = template_html.replace("{{ links }}", html_links)
+    final_html = final_html.replace("{{ last_updated }}", f"Last updated: {last_updated}")
 
     # Save the new HTML file
     with open(output_filename, "w", encoding="utf-8") as f:
