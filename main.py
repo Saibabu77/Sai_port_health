@@ -21,6 +21,8 @@ DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1360983185231581204/nRSS
 COMBINED_CSV_FILENAME = "combined_output.csv"
 EXCEL_FILENAME = "Main_All_Links_Sorted_Recent_77_prod"
 PICKLE_FILENAME = "previous_results.pkl"
+OUTPUT_HTML_FILENAME = "output/links_output.html"
+TEMPLATE_HTML_FILENAME = "template.html"
 
 keywords = [
     "Analyst", "business", "information", "technology", "supply", "chain",
@@ -51,7 +53,7 @@ def send_discord_message(content, file_path=None):
 # ========== DRIVER SETUP ========== #
 def setup_driver():
     chrome_options = Options()
-    chrome_options.add_argument("--headless=new")  # Use '--headless=new' for better compatibility or comment out for debug
+    chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36")
@@ -69,6 +71,29 @@ def save_results(results, filename=PICKLE_FILENAME):
     with open(filename, 'wb') as f:
         pickle.dump(results, f)
 
+# ========== HTML GENERATOR ========== #
+def generate_links_html(link_data, output_filename=OUTPUT_HTML_FILENAME, template_filename=TEMPLATE_HTML_FILENAME):
+    os.makedirs(os.path.dirname(output_filename), exist_ok=True)
+
+    # Load HTML template
+    with open(template_filename, "r", encoding="utf-8") as f:
+        template_html = f.read()
+
+    # Build the <li> list
+    html_links = ""
+    for url, keywords, status, timestamp in link_data:
+        if status == "Updated":
+            html_links += f'<li><a href="{url}" target="_blank">{url}</a> – {keywords} ({timestamp})</li>\n'
+
+    # Inject links into the template
+    final_html = template_html.replace("{{ links }}", html_links)
+
+    # Save the new HTML file
+    with open(output_filename, "w", encoding="utf-8") as f:
+        f.write(final_html)
+
+    print(f"✅ HTML page generated at {output_filename}")
+
 # ========== SCRAPER ========== #
 def find_keywords_in_website(driver, url):
     try:
@@ -79,8 +104,7 @@ def find_keywords_in_website(driver, url):
             EC.presence_of_element_located((By.TAG_NAME, "body"))
         )
 
-        # Scroll the page to load lazy-loaded content
-        for i in range(3):
+        for _ in range(3):
             driver.execute_script("window.scrollBy(0, window.innerHeight);")
             time.sleep(2)
 
@@ -130,7 +154,7 @@ def main():
                 current_results[url] = content_hash
                 combined_rows.append([url, keywords_str, "Updated", timestamp])
 
-        # Save only updated rows
+        # Save CSV
         if combined_rows:
             with open(COMBINED_CSV_FILENAME, mode="w", newline="", encoding="utf-8") as file:
                 writer = csv.writer(file)
@@ -138,10 +162,14 @@ def main():
                 writer.writerows(combined_rows)
             print(f"✅ Updated results saved to {COMBINED_CSV_FILENAME}")
 
+            # Save HTML
+            generate_links_html(combined_rows)
+
+            # Send Discord Message
             message = f"🔍 **Keyword Updates Found!**\nTotal updated: {updated_count}\n⚠️ Total errors: {error_count}\n📎 See attached CSV for details."
             send_discord_message(message.strip(), COMBINED_CSV_FILENAME)
         else:
-            print("No new updates detected. CSV not created.")
+            print("No new updates detected. CSV and HTML not updated.")
             send_discord_message("✅ No updates detected in the latest run.")
 
         previous_results.update(current_results)
