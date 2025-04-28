@@ -15,6 +15,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from datetime import datetime
 from zoneinfo import ZoneInfo
+
 # ========== CONFIG ========== #
 DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1360983185231581204/nRSSOwRgRoCSK0K4o9_eu8vpeQsRswLNyjUAZb6pTtrVGksrEjVw9RteyUA04xP3aNIv"
 COMBINED_CSV_FILENAME = "combined_output.csv"
@@ -50,9 +51,10 @@ def send_discord_message(content, file_path=None):
 # ========== DRIVER SETUP ========== #
 def setup_driver():
     chrome_options = Options()
-    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--headless=new")  # Use '--headless=new' for better compatibility or comment out for debug
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36")
     return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
 # ========== DATA LOAD/SAVE ========== #
@@ -73,9 +75,14 @@ def find_keywords_in_website(driver, url):
         print(f"Checking {url}...")
         driver.get(url)
 
-        WebDriverWait(driver, 15).until(
+        WebDriverWait(driver, 20).until(
             EC.presence_of_element_located((By.TAG_NAME, "body"))
         )
+
+        # Scroll the page to load lazy-loaded content
+        for i in range(3):
+            driver.execute_script("window.scrollBy(0, window.innerHeight);")
+            time.sleep(2)
 
         page_text = driver.page_source.lower()
 
@@ -104,7 +111,6 @@ def main():
     try:
         for url in urls:
             found_keywords = find_keywords_in_website(driver, url)
-
             timestamp = datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d %H:%M:%S %Z")
 
             if found_keywords is None:
@@ -132,11 +138,7 @@ def main():
                 writer.writerows(combined_rows)
             print(f"✅ Updated results saved to {COMBINED_CSV_FILENAME}")
 
-            # Send Discord message with CSV
-            message = ""
-            message += f"🔍 **Keyword Updates Found!**\nTotal updated: {updated_count}\n"
-            message += f"⚠️ Total errors: {error_count}\n"
-            message += f"📎 See attached CSV for details."
+            message = f"🔍 **Keyword Updates Found!**\nTotal updated: {updated_count}\n⚠️ Total errors: {error_count}\n📎 See attached CSV for details."
             send_discord_message(message.strip(), COMBINED_CSV_FILENAME)
         else:
             print("No new updates detected. CSV not created.")
