@@ -19,7 +19,7 @@ from zoneinfo import ZoneInfo
 # ========== CONFIG ========== #
 DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1360983185231581204/nRSSOwRgRoCSK0K4o9_eu8vpeQsRswLNyjUAZb6pTtrVGksrEjVw9RteyUA04xP3aNIv"
 COMBINED_CSV_FILENAME = "combined_output.csv"
-EXCEL_FILENAME = "Main_All_Links_Sorted_Recent_77_prod.xlsx"
+EXCEL_FILENAME = "Master_Git_Sheet.xlsx"
 PICKLE_FILENAME = "previous_results.pkl"
 OUTPUT_HTML_FILENAME = "docs/links_output.html"  # <== Save inside /docs for GitHub Pages
 TEMPLATE_HTML_FILENAME = "template.html"
