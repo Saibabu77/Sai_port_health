@@ -2,8 +2,8 @@ name: Scrape and Deploy Website
 
 on:
   schedule:
-    - cron: "*/5 * * * *"  # Run every 5 minutes
-  workflow_dispatch:       # Allow manual run
+    - cron: "0 1 * * *"  # Runs daily at 01:00 UTC (8 PM EST)
+  workflow_dispatch:
 
 jobs:
   build:
